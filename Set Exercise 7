@@ -1,0 +1,42 @@
+-- 1. Create the LOG Table
+IF OBJECT_ID('CW1.TRAIL_LOG', 'U') IS NOT NULL DROP TABLE CW1.TRAIL_LOG;
+GO
+
+CREATE TABLE CW1.TRAIL_LOG (
+    Log_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Trail_ID INT,
+    Trail_Name VARCHAR(100),
+    Action_Type VARCHAR(20),
+    Action_Time DATETIME DEFAULT GETDATE(),
+    Action_User VARCHAR(100) DEFAULT SYSTEM_USER
+);
+GO
+
+-- 2. Create the TRIGGER
+IF OBJECT_ID('CW1.TR_LogNewTrail', 'TR') IS NOT NULL DROP TRIGGER CW1.TR_LogNewTrail;
+GO
+
+CREATE TRIGGER CW1.TR_LogNewTrail
+ON CW1.TRAIL
+AFTER INSERT
+AS
+BEGIN
+    INSERT INTO CW1.TRAIL_LOG (Trail_ID, Trail_Name, Action_Type)
+    SELECT
+        i.Trail_ID,
+        i.Trail_Name,
+        'INSERT'
+    FROM
+        INSERTED i;
+END
+GO
+
+-- TEST THE TRIGGER
+-- 1. Insert a new trail
+INSERT INTO CW1.TRAIL
+(Trail_Name, Trail_Description, Length_KM, Elevation_Gain, Route_Type, Owner_ID, Difficulty_ID)
+VALUES
+('Trigger Test Walk', 'Testing the log trigger.', 2.5, 50, 'Circular', 1, 1);
+
+-- 2. Check the LOG table
+SELECT * FROM CW1.TRAIL_LOG;
