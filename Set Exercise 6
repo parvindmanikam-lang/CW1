@@ -1,0 +1,98 @@
+-- 1. READ Procedure (GetTrails)
+IF OBJECT_ID('CW1.TP_GetTrails', 'P') IS NOT NULL DROP PROCEDURE CW1.TP_GetTrails;
+GO
+
+CREATE PROCEDURE CW1.TP_GetTrails
+AS
+BEGIN
+    SELECT * FROM CW1.TRAIL;
+END
+GO
+
+-- 2. CREATE Procedure (InsertTrail)
+IF OBJECT_ID('CW1.TP_InsertTrail', 'P') IS NOT NULL DROP PROCEDURE CW1.TP_InsertTrail;
+GO
+
+CREATE PROCEDURE CW1.TP_InsertTrail
+    @Name VARCHAR(100),
+    @Desc NVARCHAR(MAX),
+    @Len DECIMAL(5,2),
+    @Elev INT,
+    @Route VARCHAR(50),
+    @Owner INT,
+    @Diff INT
+AS
+BEGIN
+    INSERT INTO CW1.TRAIL
+    (Trail_Name, Trail_Description, Length_KM, Elevation_Gain, Route_Type, Owner_ID, Difficulty_ID)
+    VALUES
+    (@Name, @Desc, @Len, @Elev, @Route, @Owner, @Diff);
+END
+GO
+
+-- 3. UPDATE Procedure (UpdateTrail)
+IF OBJECT_ID('CW1.TP_UpdateTrail', 'P') IS NOT NULL DROP PROCEDURE CW1.TP_UpdateTrail;
+GO
+
+CREATE PROCEDURE CW1.TP_UpdateTrail
+    @TrailID INT,
+    @NewName VARCHAR(100),
+    @NewLen DECIMAL(5,2)
+AS
+BEGIN
+    UPDATE CW1.TRAIL
+    SET Trail_Name = @NewName, Length_KM = @NewLen
+    WHERE Trail_ID = @TrailID;
+END
+GO
+
+-- 4. DELETE Procedure (DeleteTrail)
+IF OBJECT_ID('CW1.TP_DeleteTrail', 'P') IS NOT NULL DROP PROCEDURE CW1.TP_DeleteTrail;
+GO
+
+CREATE PROCEDURE CW1.TP_DeleteTrail
+    @TrailID INT
+AS
+BEGIN
+    -- Delete child records first to maintain referential integrity
+    DELETE FROM CW1.TRAIL_LOCATION WHERE Trail_ID = @TrailID;
+    DELETE FROM CW1.TRAIL_FEATURE WHERE Trail_ID = @TrailID;
+    -- Delete parent record
+    DELETE FROM CW1.TRAIL WHERE Trail_ID = @TrailID;
+END
+GO
+
+-- TEST SCRIPTS (As per source code blocks) --
+
+-- TEST 1: READ
+PRINT '1. Initial State';
+EXEC CW1.TP_GetTrails;
+GO
+
+-- TEST 2: INSERT
+PRINT '2. Inserting New Trail';
+EXEC CW1.TP_InsertTrail
+    'Dartmoor Test', 'Testing insert procedure', 10.00, 200, 'Linear', 1, 2;
+-- Verify
+EXEC CW1.TP_GetTrails;
+GO
+
+-- TEST 3: UPDATE
+PRINT '3. Updating Trail';
+DECLARE @TestID INT;
+SELECT @TestID = MAX(Trail_ID) FROM CW1.TRAIL;
+EXEC CW1.TP_UpdateTrail @TestID, 'Dartmoor UPDATED', 99.99;
+EXEC CW1.TP_GetTrails;
+GO
+
+-- TEST 4: DELETE
+PRINT '4. Deleting Trail';
+DECLARE @DeleteID INT;
+SELECT @DeleteID = MAX(Trail_ID) FROM CW1.TRAIL;
+EXEC CW1.TP_DeleteTrail @DeleteID;
+GO
+
+-- TEST 5: FINAL CHECK
+PRINT '5. Final Check';
+EXEC CW1.TP_GetTrails;
+GO
