@@ -1,0 +1,25 @@
+-- 1. Check if the view exists and drop it
+IF OBJECT_ID('CW1.View_TrailSummary', 'V') IS NOT NULL
+    DROP VIEW CW1.View_TrailSummary;
+GO
+
+-- 2. Create the View
+CREATE VIEW CW1.View_TrailSummary AS
+SELECT
+    t.Trail_ID,
+    t.Trail_Name,
+    t.Trail_Description,
+    t.Length_KM,
+    t.Route_Type,
+    d.Difficulty_Level,
+    u.Owner_Name
+FROM
+    CW1.TRAIL t
+INNER JOIN
+    CW1.DIFFICULTY d ON t.Difficulty_ID = d.Difficulty_ID
+INNER JOIN
+    CW1.APP_USER u ON t.Owner_ID = u.Owner_ID;
+GO
+
+-- Test the View
+SELECT * FROM CW1.View_TrailSummary;
