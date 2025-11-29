@@ -1,0 +1,71 @@
+-- A. Insert USERS
+IF NOT EXISTS (SELECT * FROM CW1.APP_USER WHERE Owner_Email = 'grace@plymouth.ac.uk')
+BEGIN
+    INSERT INTO CW1.APP_USER (Owner_Name, Owner_Email, User_Password)
+    VALUES
+    ('Ada Lovelace', 'grace@plymouth.ac.uk', 'ISAD123!'),
+    ('Tim Berners-Lee', 'tim@plymouth.ac.uk', 'COMP2001!'),
+    ('Ada Lovelace', 'ada@plymouth.ac.uk', 'InsecurePassword');
+END
+GO
+
+-- B. Insert DIFFICULTY Levels
+IF NOT EXISTS (SELECT * FROM CW1.DIFFICULTY WHERE Difficulty_Level = 'Moderate')
+BEGIN
+    INSERT INTO CW1.DIFFICULTY (Difficulty_Level)
+    VALUES ('Easy'), ('Moderate'), ('Hard');
+END
+GO
+
+-- C. Insert FEATURES
+IF NOT EXISTS (SELECT * FROM CW1.FEATURE WHERE Feature_Name = 'Scenic')
+BEGIN
+    INSERT INTO CW1.FEATURE (Feature_Name)
+    VALUES ('Scenic'), ('Dog Friendly'), ('River Walk'), ('Waterfall');
+END
+GO
+
+-- D. Insert THE TRAIL (Plymbridge Circular)
+IF NOT EXISTS (SELECT * FROM CW1.TRAIL WHERE Trail_Name = 'Plymbridge Circular')
+BEGIN
+    INSERT INTO CW1.TRAIL (Trail_Name, Trail_Description, Length_KM, Elevation_Gain, Route_Type, Owner_ID, Difficulty_ID)
+    VALUES
+    ('Plymbridge Circular', 'A scenic circular trail near Plymouth.', 5.50, 144, 'Circular', 1, 2);
+END
+GO
+
+-- E. Insert TRAIL LOCATIONS
+DECLARE @TrailID INT;
+SELECT @TrailID = Trail_ID FROM CW1.TRAIL WHERE Trail_Name = 'Plymbridge Circular';
+
+IF NOT EXISTS (SELECT * FROM CW1.TRAIL_LOCATION WHERE Trail_ID = @TrailID)
+BEGIN
+    INSERT INTO CW1.TRAIL_LOCATION (Trail_ID, Order_Sequence, Latitude, Longitude)
+    VALUES
+    (@TrailID, 1, 50.395670, -4.091230),
+    (@TrailID, 2, 50.396000, -4.092000),
+    (@TrailID, 3, 50.397000, -4.093000),
+    (@TrailID, 4, 50.398000, -4.094000);
+END
+GO
+
+-- F. Insert TRAIL FEATURES (Link Entity)
+DECLARE @TrailID_Feat INT;
+DECLARE @FeatScenic INT;
+DECLARE @FeatRiver INT;
+
+SELECT @TrailID_Feat = Trail_ID FROM CW1.TRAIL WHERE Trail_Name = 'Plymbridge Circular';
+SELECT @FeatScenic = Feature_ID FROM CW1.FEATURE WHERE Feature_Name = 'Scenic';
+SELECT @FeatRiver = Feature_ID FROM CW1.FEATURE WHERE Feature_Name = 'River Walk';
+
+IF NOT EXISTS (SELECT * FROM CW1.TRAIL_FEATURE WHERE Trail_ID = @TrailID_Feat)
+BEGIN
+    INSERT INTO CW1.TRAIL_FEATURE (Trail_ID, Feature_ID)
+    VALUES (@TrailID_Feat, @FeatScenic), (@TrailID_Feat, @FeatRiver);
+END
+GO
+
+-- Verification Selects
+SELECT * FROM CW1.APP_USER;
+SELECT * FROM CW1.TRAIL;
+SELECT * FROM CW1.TRAIL_LOCATION;
